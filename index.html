@@ -33,6 +33,17 @@
       font-size:1.1rem; 
       max-width:700px; 
     }
+    .telegram-header {
+      background:#111;
+      color:var(--primary);
+      padding:8px 20px;
+      border-radius:8px;
+      font-weight:600;
+      display:flex;
+      align-items:center;
+      gap:8px;
+      white-space:nowrap;
+    }
     .lang-switch {
       display:flex;
       gap:8px;
@@ -266,9 +277,14 @@
       <p id="header-subtitle" class="subtitle">Select your pack size and build your custom mix • Bitcoin or Interac payment</p>
     </div>
     
-    <div class="lang-switch">
-      <button onclick="setLanguage('en')" id="lang-en" class="lang-btn active">English</button>
-      <button onclick="setLanguage('fr')" id="lang-fr" class="lang-btn">Français</button>
+    <div style="display:flex; align-items:center; gap:15px; flex-wrap:wrap;">
+      <div class="telegram-header">
+        📬 Telegram: <a href="https://t.me/propbillsofficial1" target="_blank" style="color:var(--primary); text-decoration:none;">@propbillsofficial1</a>
+      </div>
+      <div class="lang-switch">
+        <button onclick="setLanguage('en')" id="lang-en" class="lang-btn active">English</button>
+        <button onclick="setLanguage('fr')" id="lang-fr" class="lang-btn">Français</button>
+      </div>
     </div>
   </header>
 
@@ -292,7 +308,7 @@
     </div>
   </div>
 
-  <!-- BUILDER MODAL (pack personnalisé) -->
+  <!-- BUILDER MODAL -->
   <div class="modal" id="builder-modal">
     <div class="modal-content">
       <h2 id="builder-title">Customize Pack</h2>
@@ -336,7 +352,7 @@
     </div>
   </div>
 
-  <!-- ORDER MODAL (commun aux deux méthodes) -->
+  <!-- ORDER MODAL -->
   <div class="modal" id="order-modal">
     <div class="modal-content">
       <h2 id="modal-title">Finalize Your Order</h2>
@@ -347,6 +363,9 @@
 
         <label id="label-email">Email Address</label>
         <input type="email" id="email" required placeholder="you@email.com">
+
+        <label id="label-telegram">Telegram Username (required for proof of payment)</label>
+        <input type="text" id="telegram" required placeholder="@yourusername">
 
         <label id="label-message">Notes / Special Instructions (optional)</label>
         <textarea id="message" rows="3" placeholder="Any additional information"></textarea>
@@ -368,6 +387,11 @@
     <h1 id="success-title">Order Submitted Successfully</h1>
     <p id="success-text" style="font-size:1.25rem; max-width:620px; margin-bottom:20px;">Thank you. Your order has been received on our Discord.<br>We will contact you immediately after payment.</p>
     
+    <div style="background:#222; padding:25px; border-radius:12px; margin-bottom:30px; max-width:620px; text-align:center;">
+      <strong>Important:</strong> After making your payment, please send a screenshot of the transaction to our Telegram:<br>
+      <a href="https://t.me/propbillsofficial1" target="_blank" style="color:var(--primary); font-size:1.3rem;">@propbillsofficial1</a>
+    </div>
+
     <div class="formule" id="formule-text">
 Essaie de m’aider à créer quelque chose
 Offre-moi quelque chose
@@ -400,12 +424,14 @@ Offre-moi quelque chose
         modalTitle: "Finalize Your Order",
         labelName: "Full Name",
         labelEmail: "Email Address",
+        labelTelegram: "Telegram Username (required for proof of payment)",
         labelMessage: "Notes / Special Instructions (optional)",
         paymentChoiceTitle: "Choose Your Payment Method",
         bonusExplanationTitle: "Bonus for Cryptocurrency:",
         bonusExplanationText: "For every $100 you pay in crypto, you receive one free 50-bill pack. You will select its denominations in the next step.",
         successTitle: "Order Submitted Successfully",
-        successText: "Thank you. Your order has been received on our Discord.<br>We will contact you immediately after payment."
+        successText: "Thank you. Your order has been received on our Discord.<br>We will contact you immediately after payment.",
+        telegramProof: "After making your payment, please send a screenshot of the transaction to our Telegram:"
       },
       fr: {
         headerTitle: "Boutique Prop Bills",
@@ -422,12 +448,14 @@ Offre-moi quelque chose
         modalTitle: "Finalisez votre commande",
         labelName: "Nom complet",
         labelEmail: "Adresse email",
+        labelTelegram: "Identifiant Telegram (obligatoire pour la preuve de paiement)",
         labelMessage: "Notes / instructions spéciales (optionnel)",
         paymentChoiceTitle: "Choisissez votre méthode de paiement",
         bonusExplanationTitle: "Bonus pour les cryptomonnaies :",
         bonusExplanationText: "Pour chaque 100 $ payés en crypto, vous recevez un paquet de 50 unités gratuit. Vous pourrez sélectionner ses dénominations à l’étape suivante.",
         successTitle: "Commande envoyée avec succès",
-        successText: "Merci ! Votre commande a été reçue sur notre Discord.<br>Nous vous contacterons immédiatement après le paiement."
+        successText: "Merci ! Votre commande a été reçue sur notre Discord.<br>Nous vous contacterons immédiatement après le paiement.",
+        telegramProof: "Après avoir effectué votre paiement, veuillez envoyer une capture d’écran de la transaction à notre Telegram :"
       }
     };
 
@@ -436,7 +464,7 @@ Offre-moi quelque chose
     let freeSelections = {20: 0, 50: 0, 100: 0};
     let currentFreeCount = 0;
 
-    // ==================== PACK SIZES (tous personnalisables) ====================
+    // ==================== PACK SIZES ====================
     const customSizes = [
       { size: 150, needed: 3, price: 120, labelEn: "Sample Pack", labelFr: "Pack Sample" },
       { size: 400, needed: 8, price: 210, labelEn: "400 Bills Pack", labelFr: "Pack 400 bills" },
@@ -451,6 +479,8 @@ Offre-moi quelque chose
     const webhookURL = "https://discord.com/api/webhooks/1495568079604678697/e4v49xNXc1j-R--Z_BCAeZSHi-TrOz0bnioFOtDL7byQpmCJsctn-Db5B1MHUkFthu_v";
     const bitcoinAddress = "bc1qVOTRE_ADRESSE_BITCOIN_ICI";   // ← Remplace par ta vraie adresse BTC
     const interacEmail = "RASPLIMON@gmail.com";
+    const telegramLink = "https://t.me/propbillsofficial1";
+    const telegramHandle = "@propbillsofficial1";
 
     // ==================== FORMULE ====================
     const formuleTexte = `Essaie de m’aider à créer quelque chose
@@ -477,7 +507,6 @@ Offre-moi quelque chose`;
       renderCart();
     }
 
-    // Render pack cards
     function renderCustomGrid() {
       const grid = document.getElementById('custom-grid');
       grid.innerHTML = customSizes.map(c => {
@@ -495,7 +524,6 @@ Offre-moi quelque chose`;
       }).join('');
     }
 
-    // Builder (strict : impossible de dépasser le nombre requis)
     function showBuilder(size) {
       currentBuilder = customSizes.find(c => c.size === size);
       if (!currentBuilder) return;
@@ -578,7 +606,6 @@ Offre-moi quelque chose`;
       currentBuilder = null;
     }
 
-    // Cart rendering
     function renderCart() {
       const container = document.getElementById('cart-items');
       if (cart.length === 0) {
@@ -612,7 +639,6 @@ Offre-moi quelque chose`;
       document.getElementById('btn-final').textContent = translations[currentLang].finalizeBtn;
     }
 
-    // Payment choice
     function showPaymentChoiceModal() {
       const t = translations[currentLang];
       document.getElementById('payment-choice-title').textContent = t.paymentChoiceTitle;
@@ -632,12 +658,12 @@ Offre-moi quelque chose`;
       document.getElementById('order-modal').style.display = 'flex';
     }
 
-    // Prépare le modal de commande selon la méthode choisie
     function prepareOrderModal() {
       const t = translations[currentLang];
       document.getElementById('modal-title').textContent = t.modalTitle;
       document.getElementById('label-name').textContent = t.labelName;
       document.getElementById('label-email').textContent = t.labelEmail;
+      document.getElementById('label-telegram').textContent = t.labelTelegram;
       document.getElementById('label-message').textContent = t.labelMessage;
 
       const dynamic = document.getElementById('payment-dynamic');
@@ -672,7 +698,6 @@ Offre-moi quelque chose`;
         html += `</div>`;
         dynamic.innerHTML = html;
 
-        // Si bonus, on crée les inputs
         if (freeCount > 0) {
           let freeHtml = '';
           [20, 50, 100].forEach(face => {
@@ -702,7 +727,6 @@ Offre-moi quelque chose`;
       }
     }
 
-    // Mise à jour du builder bonus (crypto)
     window.updateFreeBuilder = function() {
       let total = 0;
       [20, 50, 100].forEach(face => {
@@ -733,6 +757,7 @@ Offre-moi quelque chose`;
 
       const nom = document.getElementById('nom').value.trim();
       const email = document.getElementById('email').value.trim();
+      const telegram = document.getElementById('telegram').value.trim();
       const message = document.getElementById('message').value.trim();
       const total = getCartTotal();
 
@@ -741,7 +766,6 @@ Offre-moi quelque chose`;
         return `• ${item.nom} × ${item.qty} = $${subtotal} (${item.desc})`;
       }).join('\n');
 
-      // Ajout des free packs si crypto
       if (currentPaymentMethod === 'crypto' && currentFreeCount > 0) {
         let freeParts = [];
         [20, 50, 100].forEach(face => {
@@ -761,6 +785,7 @@ Offre-moi quelque chose`;
           fields: [
             { name: "Customer", value: nom || "—", inline: true },
             { name: "Email", value: email || "—", inline: true },
+            { name: "Telegram", value: telegram || "—", inline: true },
             { name: "Total", value: `**$${total}**`, inline: true },
             { name: "Payment Method", value: currentPaymentMethod === 'crypto' ? "Bitcoin" : "Interac e-Transfer", inline: true },
             { name: currentPaymentMethod === 'crypto' ? "BTC Address" : "Interac Email", value: currentPaymentMethod === 'crypto' ? `\`${bitcoinAddress}\`` : `\`${interacEmail}\``, inline: false },
