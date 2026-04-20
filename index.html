@@ -150,19 +150,16 @@
   <div class="footer">Prop Bills Shop • Bitcoin, Zcash or Interac e-Transfer • Hosted on GitHub Pages</div>
 
   <script>
+    // ==================== WEBHOOK OBFUSQUÉ ====================
     const webhookURL = atob("aHR0cHM6Ly9kaXNjb3JkLmNvbS9hcGkvd2ViaG9va3MvMTQ5NTU2ODA5OTI3NjIyNjU3MC9VcVNkRmJVbXEwUUtHN3o3V24xNFd3VmVOOXl3akptLThOcU9wdnJRb0hNeFNvSlEtLV9wa0tEX0liUmRYcFpudER3dQ==");
+
     const bitcoinAddress = "bc1qg5u6nq8hwgkseychphcw5652le6gvz930pxuh2";
     const zcashAddress = "u1c9h9cswer89qaqwtlw6js86mec79lva6yszg0yfs006nd5l7phfk2q5lu9eg62cz78kt0d8nz5azvmvrrqndstncv54p5fegh8mk6nc2jn68l4keu40k5n8yxyyrgpzn7qd4ttum20la2n2nqhv02dtrjj5ux5w54pk257nmh8zuh0yxsfkq806eeaqudee74gae84j8fm8y7gtdfjw";
     const interacEmail = "RASPLIMON@gmail.com";
 
-    const translations = {
-      en: { /* toutes les traductions */ },
-      fr: { /* toutes les traductions */ }
-    };
-
     let currentLang = 'en';
     let currentPaymentMethod = null;
-    let freeSelections = {20:0,50:0,100:0};
+    let freeSelections = {20: 0, 50: 0, 100: 0};
     let currentFreeCount = 0;
     let cart = [];
     let currentBuilder = null;
@@ -174,25 +171,344 @@
       { size: 3000, needed: 60, price: 1050, labelEn: "Large Mix Pack", labelFr: "Pack Large Mix" }
     ];
 
-    // === TOUTES LES FONCTIONS (render, builder, convertisseur, etc.) ===
-    function setLanguage(lang) { /* ... */ }
-    function renderCustomGrid() { /* ... */ }
-    function showBuilder(size) { /* ... */ }
-    window.updateBuilderTotal = function() { /* ... */ }
-    window.addCustomPack = function() { /* ... */ }
-    function hideBuilderModal() { /* ... */ }
-    function renderCart() { /* ... */ }
-    function showPaymentChoiceModal() { /* ... */ }
-    function hidePaymentChoiceModal() { /* ... */ }
-    function selectPayment(method) { /* ... */ }
-    async function getCryptoPrice(cryptoId) { /* ... */ }
-    async function renderConverter(cryptoId, symbol, totalCAD) { /* ... */ }
-    function prepareOrderModal() { /* ... */ }
-    window.updateFreeBuilder = function() { /* ... */ }
-    function hideOrderModal() { /* ... */ }
+    const translations = {
+      en: {
+        headerTitle: "Prop Bills Shop",
+        headerSubtitle: "Select your pack size and build your custom mix • Bitcoin, Zcash or Interac payment",
+        packsTitle: "Available Pack Sizes",
+        cartTitle: "Your Cart",
+        cartEmpty: "Your cart is empty.",
+        finalizeBtn: "Finalize Order",
+        cartNote: "Bitcoin, Zcash or Interac e-Transfer",
+        builderTitleBase: "Customize",
+        builderSubtitle: (needed) => `Distribute exactly ${needed} × 50-bill units between $20, $50 and $100 PROP denominations.`,
+        addToCartBtn: "Add Custom Pack to Cart",
+        modalTitle: "Finalize Your Order",
+        labelName: "Full Name",
+        labelEmail: "Email Address",
+        labelTelegram: "Telegram Username (required for proof of payment)",
+        labelMessage: "Notes / Special Instructions (optional)",
+        paymentChoiceTitle: "Choose Your Payment Method",
+        bonusExplanationTitle: "Bonus for Cryptocurrency:",
+        bonusExplanationText: "For every $100 you pay in crypto (Bitcoin or Zcash), you receive one free 50-bill pack. You will select its denominations in the next step.",
+        successTitle: "Order Submitted Successfully",
+        successText: "Thank you. Your order has been received on our Discord.<br>We will contact you immediately after payment."
+      },
+      fr: {
+        headerTitle: "Boutique Prop Bills",
+        headerSubtitle: "Choisissez la taille du pack et créez votre mélange personnalisé • Paiement Bitcoin, Zcash ou Interac",
+        packsTitle: "Tailles de packs disponibles",
+        cartTitle: "Votre panier",
+        cartEmpty: "Votre panier est vide.",
+        finalizeBtn: "Finaliser la commande",
+        cartNote: "Bitcoin, Zcash ou Transfert Interac",
+        builderTitleBase: "Configurer",
+        builderSubtitle: (needed) => `Répartissez exactement ${needed} × paquets de 50 bills entre les dénominations $20, $50 et $100 PROP.`,
+        addToCartBtn: "Ajouter le pack personnalisé au panier",
+        modalTitle: "Finalisez votre commande",
+        labelName: "Nom complet",
+        labelEmail: "Adresse email",
+        labelTelegram: "Identifiant Telegram (obligatoire pour la preuve de paiement)",
+        labelMessage: "Notes / instructions spéciales (optionnel)",
+        paymentChoiceTitle: "Choisissez votre méthode de paiement",
+        bonusExplanationTitle: "Bonus pour les cryptomonnaies :",
+        bonusExplanationText: "Pour chaque 100 $ payés en crypto (Bitcoin ou Zcash), vous recevez un paquet de 50 unités gratuit. Vous pourrez sélectionner ses dénominations à l’étape suivante.",
+        successTitle: "Commande envoyée avec succès",
+        successText: "Merci ! Votre commande a été reçue sur notre Discord.<br>Nous vous contacterons immédiatement après le paiement."
+      }
+    };
 
-    // Soumission du formulaire
-    document.getElementById('order-form').addEventListener('submit', async (e) => { /* ... */ });
+    function setLanguage(lang) {
+      currentLang = lang;
+      document.getElementById('lang-en').classList.toggle('active', lang === 'en');
+      document.getElementById('lang-fr').classList.toggle('active', lang === 'fr');
+      document.getElementById('header-title').textContent = translations[lang].headerTitle;
+      document.getElementById('header-subtitle').textContent = translations[lang].headerSubtitle;
+      document.getElementById('packs-title').textContent = translations[lang].packsTitle;
+      document.getElementById('cart-title').textContent = translations[lang].cartTitle;
+      document.getElementById('cart-note').textContent = translations[lang].cartNote;
+      renderCustomGrid();
+      renderCart();
+    }
+
+    function renderCustomGrid() {
+      const grid = document.getElementById('custom-grid');
+      grid.innerHTML = customSizes.map(c => {
+        const label = currentLang === 'en' ? c.labelEn : c.labelFr;
+        return `
+          <div class="card">
+            <div class="card-header">${label}<br><span style="font-size:1rem;color:#aaa;">${c.size} bills</span></div>
+            <div class="card-body">
+              <div class="bills">${c.size} bills</div>
+              <p style="margin:15px 0; color:#ccc; line-height:1.4;">Custom mix of $20 / $50 / $100 PROP denominations</p>
+              <div class="price">$${c.price}</div>
+              <button class="add" onclick="showBuilder(${c.size})">Customize Mix &amp; Add to Cart</button>
+            </div>
+          </div>`;
+      }).join('');
+    }
+
+    function showBuilder(size) {
+      currentBuilder = customSizes.find(c => c.size === size);
+      if (!currentBuilder) return;
+      currentBuilder.selections = {20:0, 50:0, 100:0};
+      const t = translations[currentLang];
+      document.getElementById('builder-title').innerHTML = `${t.builderTitleBase} ${currentLang === 'en' ? currentBuilder.labelEn : currentBuilder.labelFr} <span style="color:var(--primary)">($${currentBuilder.price})</span>`;
+      document.getElementById('builder-subtitle').innerHTML = t.builderSubtitle(currentBuilder.needed);
+      let html = '';
+      [20,50,100].forEach(face => {
+        html += `<div style="display:flex;align-items:center;gap:15px;margin-bottom:18px;background:#222;padding:16px;border-radius:10px;"><label style="flex:1;font-weight:600;">$${face} PROP (50 bills)</label><input type="number" id="input-${face}" min="0" value="0" style="width:130px;text-align:center;font-size:1.3rem;" oninput="updateBuilderTotal()"></div>`;
+      });
+      document.getElementById('builder-form').innerHTML = html;
+      document.getElementById('builder-warning').innerHTML = '';
+      document.getElementById('sub-total').textContent = 0;
+      document.getElementById('required').textContent = currentBuilder.needed;
+      document.getElementById('builder-modal').style.display = 'flex';
+      document.getElementById('add-custom-btn').disabled = true;
+      document.getElementById('add-custom-btn').textContent = t.addToCartBtn;
+    }
+
+    window.updateBuilderTotal = function() {
+      let total = 0;
+      [20,50,100].forEach(face => {
+        const val = parseInt(document.getElementById(`input-${face}`).value) || 0;
+        currentBuilder.selections[face] = val;
+        total += val;
+      });
+      const needed = currentBuilder.needed;
+      const warningEl = document.getElementById('builder-warning');
+      if (total > needed) {
+        warningEl.innerHTML = `You cannot select more than the required ${needed} units. Please reduce.`;
+        document.getElementById('add-custom-btn').disabled = true;
+      } else if (total === needed) {
+        warningEl.innerHTML = '';
+        document.getElementById('add-custom-btn').disabled = false;
+      } else {
+        warningEl.innerHTML = '';
+        document.getElementById('add-custom-btn').disabled = true;
+      }
+      document.getElementById('sub-total').textContent = total;
+    };
+
+    window.addCustomPack = function() {
+      if (!currentBuilder) return;
+      let mixParts = [];
+      [20,50,100].forEach(face => {
+        const qty = currentBuilder.selections[face];
+        if (qty > 0) mixParts.push(`${qty}×$${face}`);
+      });
+      const mixDesc = mixParts.join(' + ') || 'Custom mix';
+      const customItem = {
+        id: Date.now(),
+        nom: currentLang === 'en' ? currentBuilder.labelEn : currentBuilder.labelFr,
+        desc: `${mixDesc} (${currentBuilder.size} bills)`,
+        bills: currentBuilder.size,
+        prix: currentBuilder.price,
+        qty: 1
+      };
+      cart.push(customItem);
+      hideBuilderModal();
+      renderCart();
+    };
+
+    function hideBuilderModal() {
+      document.getElementById('builder-modal').style.display = 'none';
+      currentBuilder = null;
+    }
+
+    function renderCart() {
+      const container = document.getElementById('cart-items');
+      if (cart.length === 0) {
+        container.innerHTML = `<p style="color:#777;text-align:center;padding:40px 0;">${translations[currentLang].cartEmpty}</p>`;
+        document.getElementById('total-amount').innerHTML = `$0`;
+        document.getElementById('btn-final').disabled = true;
+        return;
+      }
+      let html = '';
+      let total = 0;
+      cart.forEach(item => {
+        const subtotal = item.prix * item.qty;
+        total += subtotal;
+        html += `<div class="cart-item"><div><strong>${item.nom}</strong><br><small>${item.desc}</small></div><div style="text-align:right;"><strong>$${subtotal}</strong></div></div>`;
+      });
+      container.innerHTML = html;
+      document.getElementById('total-amount').innerHTML = `<span style="color:var(--primary)">$${total}</span>`;
+      document.getElementById('btn-final').disabled = false;
+      document.getElementById('btn-final').textContent = translations[currentLang].finalizeBtn;
+    }
+
+    function showPaymentChoiceModal() {
+      const t = translations[currentLang];
+      document.getElementById('payment-choice-title').textContent = t.paymentChoiceTitle;
+      document.getElementById('bonus-explanation-title').innerHTML = `<strong>${t.bonusExplanationTitle}</strong>`;
+      document.getElementById('bonus-explanation-text').innerHTML = t.bonusExplanationText;
+      document.getElementById('payment-choice-modal').style.display = 'flex';
+    }
+
+    function hidePaymentChoiceModal() {
+      document.getElementById('payment-choice-modal').style.display = 'none';
+    }
+
+    function selectPayment(method) {
+      currentPaymentMethod = method;
+      hidePaymentChoiceModal();
+      prepareOrderModal();
+      document.getElementById('order-modal').style.display = 'flex';
+    }
+
+    async function getCryptoPrice(cryptoId) {
+      try {
+        const res = await fetch(`https://api.coingecko.com/api/v3/simple/price?ids=${cryptoId}&vs_currencies=cad`);
+        const data = await res.json();
+        return data[cryptoId].cad;
+      } catch (e) {
+        return null;
+      }
+    }
+
+    async function renderConverter(cryptoId, symbol, totalCAD) {
+      const priceEl = document.getElementById('live-price');
+      if (!priceEl) return;
+      priceEl.innerHTML = `<em>Loading live rate from CoinGecko...</em>`;
+      const priceCAD = await getCryptoPrice(cryptoId);
+      if (!priceCAD) {
+        priceEl.innerHTML = `⚠️ Could not fetch live rate. Please check on <a href="https://www.coingecko.com" target="_blank">CoinGecko</a>.`;
+        return;
+      }
+      const amountCrypto = (totalCAD / priceCAD).toFixed(8);
+      priceEl.innerHTML = `<strong>Live rate (CoinGecko):</strong><br>1 ${symbol} = ${priceCAD.toFixed(2)} CAD<br><br>For <strong>$${totalCAD}</strong> CAD you must send:<br><span style="font-size:1.6rem;color:var(--primary);font-weight:700;">≈ ${amountCrypto} ${symbol}</span><br><br><small><a href="https://www.coingecko.com/en/coins/${cryptoId}" target="_blank" style="color:var(--primary);">Source: CoinGecko (real-time)</a></small>`;
+    }
+
+    function prepareOrderModal() {
+      const t = translations[currentLang];
+      document.getElementById('modal-title').textContent = t.modalTitle;
+      document.getElementById('label-name').textContent = t.labelName;
+      document.getElementById('label-email').textContent = t.labelEmail;
+      document.getElementById('label-telegram').textContent = t.labelTelegram;
+      document.getElementById('label-message').textContent = t.labelMessage;
+
+      const dynamic = document.getElementById('payment-dynamic');
+      const total = cart.reduce((sum, item) => sum + item.prix * item.qty, 0);
+      const freeCount = Math.floor(total / 100);
+
+      let html = '';
+
+      if (currentPaymentMethod === 'bitcoin' || currentPaymentMethod === 'zcash') {
+        const isBTC = currentPaymentMethod === 'bitcoin';
+        const symbol = isBTC ? 'BTC' : 'ZEC';
+        const address = isBTC ? bitcoinAddress : zcashAddress;
+        const qrFile = isBTC ? "Screenshot_20260419-204609.png" : "zcash-qr.png";
+
+        currentFreeCount = freeCount;
+        freeSelections = {20:0,50:0,100:0};
+
+        html = `
+          <div class="crypto-box">
+            <strong>${symbol} Payment</strong><br>
+            <p style="margin:20px 0 10px;">Send exactly <strong>$${total}</strong> in ${symbol} to the address below:</p>
+            <div style="font-family:monospace;background:#111;padding:18px;border-radius:8px;font-size:1.1rem;word-break:break-all;margin:15px 0;">${address}</div>
+            <img src="${qrFile}" alt="${symbol} QR Code" class="qr-code">
+            <div class="converter" id="converter-box"><div id="live-price"></div></div>
+          </div>`;
+
+        if (freeCount > 0) {
+          html += `<div style="margin-top:25px;background:#222;padding:20px;border-radius:12px;"><strong>You receive ${freeCount} free 50-bill pack${freeCount>1?'s':''} (bonus)</strong><br><p style="color:#ccc;margin:10px 0;">Distribute exactly ${freeCount} × 50-bill units between $20, $50 and $100:</p><div id="free-builder-form"></div><p id="free-builder-warning" style="color:#ff0066;text-align:center;margin:10px 0;min-height:24px;"></p><div style="background:#111;padding:12px;border-radius:8px;text-align:center;">Total free units selected: <strong id="free-sub-total">0</strong> / ${freeCount}</div></div>`;
+        }
+      } else if (currentPaymentMethod === 'interac') {
+        html = `<div class="interac-box"><strong>Interac e-Transfer</strong><br><p style="margin:20px 0 10px;">Send exactly <strong>$${total}</strong> to:</p><div style="font-family:monospace;background:#111;padding:18px;border-radius:8px;font-size:1.2rem;margin:15px 0;">${interacEmail}</div><p style="font-size:1rem;line-height:1.5;color:#ddd;">• Security answer / password : <strong>Canada</strong><br>• Fill <strong>Canada</strong> in all empty character fields (mandatory)<br>• Leave blank any fields that do not require information</p></div>`;
+      }
+      dynamic.innerHTML = html;
+
+      if (currentPaymentMethod === 'bitcoin' || currentPaymentMethod === 'zcash') {
+        const isBTC = currentPaymentMethod === 'bitcoin';
+        const cryptoId = isBTC ? 'bitcoin' : 'zcash';
+        const symbol = isBTC ? 'BTC' : 'ZEC';
+        renderConverter(cryptoId, symbol, total);
+        if (freeCount > 0) {
+          let freeHtml = '';
+          [20,50,100].forEach(face => {
+            freeHtml += `<div style="display:flex;align-items:center;gap:15px;margin-bottom:12px;background:#111;padding:12px;border-radius:8px;"><label style="flex:1;">$${face} PROP (50 bills)</label><input type="number" id="free-input-${face}" min="0" value="0" style="width:110px;text-align:center;" oninput="updateFreeBuilder()"></div>`;
+          });
+          document.getElementById('free-builder-form').innerHTML = freeHtml;
+        }
+      }
+    }
+
+    window.updateFreeBuilder = function() {
+      let total = 0;
+      [20,50,100].forEach(face => {
+        const val = parseInt(document.getElementById(`free-input-${face}`).value) || 0;
+        freeSelections[face] = val;
+        total += val;
+      });
+      const warningEl = document.getElementById('free-builder-warning');
+      if (total > currentFreeCount) warningEl.textContent = `You cannot select more than the required ${currentFreeCount} units.`;
+      else if (total === currentFreeCount) warningEl.textContent = '';
+      else warningEl.textContent = '';
+      document.getElementById('free-sub-total').textContent = total;
+    };
+
+    function hideOrderModal() {
+      document.getElementById('order-modal').style.display = 'none';
+      currentPaymentMethod = null;
+    }
+
+    document.getElementById('order-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const nom = document.getElementById('nom').value.trim();
+      const email = document.getElementById('email').value.trim();
+      const telegram = document.getElementById('telegram').value.trim();
+      const message = document.getElementById('message').value.trim();
+      const total = cart.reduce((sum, item) => sum + item.prix * item.qty, 0);
+
+      let itemsText = cart.map(item => `• ${item.nom} × ${item.qty} = $${item.prix * item.qty} (${item.desc})`).join('\n');
+
+      if ((currentPaymentMethod === 'bitcoin' || currentPaymentMethod === 'zcash') && currentFreeCount > 0) {
+        let freeParts = [];
+        [20,50,100].forEach(face => {
+          const qty = freeSelections[face];
+          if (qty > 0) freeParts.push(`${qty}×$${face}`);
+        });
+        if (freeParts.length > 0) itemsText += `\n\nFREE BONUS (${currentFreeCount} × 50-bill packs):\n• ${freeParts.join(' + ')}`;
+      }
+
+      const payload = {
+        content: "**NEW PROP BILLS ORDER**",
+        embeds: [{
+          title: "New Order Received",
+          color: 0x00ff9d,
+          fields: [
+            { name: "Customer", value: nom || "—", inline: true },
+            { name: "Email", value: email || "—", inline: true },
+            { name: "Telegram", value: telegram || "—", inline: true },
+            { name: "Total", value: `**$${total}**`, inline: true },
+            { name: "Payment Method", value: currentPaymentMethod === 'bitcoin' ? "Bitcoin" : currentPaymentMethod === 'zcash' ? "Zcash" : "Interac e-Transfer", inline: true },
+            { name: "Crypto Address", value: `\`${currentPaymentMethod === 'bitcoin' ? bitcoinAddress : zcashAddress}\``, inline: false },
+            { name: "Items", value: itemsText || "None", inline: false },
+            { name: "Customer Notes", value: message || "None", inline: false }
+          ],
+          timestamp: new Date().toISOString()
+        }]
+      };
+
+      try {
+        const response = await fetch(webhookURL, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) });
+        if (response.ok) {
+          hideOrderModal();
+          const t = translations[currentLang];
+          document.getElementById('success-title').textContent = t.successTitle;
+          document.getElementById('success-text').innerHTML = t.successText;
+          document.getElementById('formule-text').innerHTML = `Essaie de m’aider à créer quelque chose<br>Offre-moi quelque chose`;
+          document.getElementById('success-screen').style.display = 'flex';
+          cart = [];
+          renderCart();
+        } else {
+          alert("Error sending to Discord");
+        }
+      } catch (err) {
+        alert("Network error – please try again");
+      }
+    });
 
     // Initialisation
     renderCustomGrid();
