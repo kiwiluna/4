@@ -1,0 +1,804 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Prop Bills Shop • Custom Mix Packs</title>
+  <style>
+    :root { --primary: #00ff9d; }
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body { 
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif; 
+      background:#111; 
+      color:#eee; 
+      line-height:1.6; 
+    }
+    header { 
+      background:#000; 
+      padding:25px 20px; 
+      border-bottom:3px solid var(--primary); 
+      display:flex; 
+      justify-content:space-between; 
+      align-items:center; 
+      flex-wrap:wrap; 
+      gap:15px;
+    }
+    h1 { 
+      font-size:2.4rem; 
+      color:#fff; 
+      font-weight:700; 
+    }
+    .subtitle { 
+      color:#aaa; 
+      font-size:1.1rem; 
+      max-width:700px; 
+    }
+    .lang-switch {
+      display:flex;
+      gap:8px;
+    }
+    .lang-btn {
+      padding:8px 18px;
+      background:#222;
+      color:#eee;
+      border:1px solid #444;
+      border-radius:6px;
+      font-size:1rem;
+      cursor:pointer;
+      transition:all 0.2s;
+    }
+    .lang-btn.active {
+      background:var(--primary);
+      color:#000;
+      border-color:var(--primary);
+      font-weight:600;
+    }
+    .container { 
+      max-width:1280px; 
+      margin:0 auto; 
+      padding:40px 20px; 
+      display:grid; 
+      grid-template-columns:1fr 380px; 
+      gap:40px; 
+    }
+    .products-grid { 
+      display:grid; 
+      grid-template-columns:repeat(auto-fit, minmax(300px, 1fr)); 
+      gap:25px; 
+    }
+    .card { 
+      background:#1f1f1f; 
+      border-radius:12px; 
+      overflow:hidden; 
+      transition:all 0.3s; 
+      border:2px solid #333; 
+    }
+    .card:hover { 
+      transform:translateY(-6px); 
+      border-color:var(--primary); 
+    }
+    .card-header { 
+      background:#000; 
+      padding:20px; 
+      text-align:center; 
+      font-size:1.4rem; 
+      font-weight:600; 
+    }
+    .card-body { 
+      padding:25px; 
+    }
+    .price { 
+      font-size:2.2rem; 
+      font-weight:700; 
+      color:var(--primary); 
+      margin:15px 0; 
+    }
+    .bills { 
+      background:#222; 
+      padding:10px 16px; 
+      border-radius:8px; 
+      display:inline-block; 
+      margin-bottom:15px; 
+      font-size:1rem; 
+      font-weight:500; 
+    }
+    button.add { 
+      width:100%; 
+      background:var(--primary); 
+      color:#000; 
+      border:none; 
+      padding:16px; 
+      font-size:1.1rem; 
+      font-weight:600; 
+      border-radius:8px; 
+      cursor:pointer; 
+    }
+    button.add:hover { background:#00cc7a; }
+
+    .cart { 
+      background:#1f1f1f; 
+      border-radius:12px; 
+      padding:25px; 
+      position:sticky; 
+      top:30px; 
+    }
+    .cart h2 { 
+      margin-bottom:20px; 
+      color:#fff; 
+      font-size:1.5rem; 
+      font-weight:600; 
+    }
+    .cart-item { 
+      display:flex; 
+      justify-content:space-between; 
+      margin-bottom:16px; 
+      padding-bottom:16px; 
+      border-bottom:1px solid #333; 
+    }
+    .total { 
+      font-size:1.9rem; 
+      font-weight:700; 
+      color:var(--primary); 
+      margin:25px 0 10px; 
+      text-align:right; 
+    }
+    .btn-final { 
+      width:100%; 
+      background:#ff0066; 
+      color:white; 
+      border:none; 
+      padding:18px; 
+      font-size:1.25rem; 
+      font-weight:700; 
+      border-radius:12px; 
+      cursor:pointer; 
+    }
+    .btn-final:disabled { 
+      background:#444; 
+      cursor:not-allowed; 
+    }
+
+    .modal { 
+      display:none; 
+      position:fixed; 
+      top:0; left:0; 
+      width:100%; height:100%; 
+      background:rgba(0,0,0,0.92); 
+      align-items:center; 
+      justify-content:center; 
+      z-index:1000; 
+    }
+    .modal-content { 
+      background:#1f1f1f; 
+      width:90%; 
+      max-width:640px; 
+      border-radius:16px; 
+      padding:35px; 
+      max-height:90vh; 
+      overflow-y:auto; 
+    }
+    .modal-content h2 { 
+      color:#fff; 
+      margin-bottom:10px; 
+      font-size:1.6rem; 
+    }
+    label { 
+      display:block; 
+      margin:20px 0 8px; 
+      font-weight:600; 
+      color:#ddd; 
+    }
+    input, textarea { 
+      width:100%; 
+      padding:14px; 
+      margin-bottom:20px; 
+      background:#222; 
+      border:none; 
+      border-radius:8px; 
+      color:#eee; 
+      font-size:1.1rem; 
+    }
+    .payment-dynamic { 
+      margin:25px 0; 
+    }
+    .btc-address { 
+      font-family:monospace; 
+      background:#111; 
+      padding:18px; 
+      border-radius:8px; 
+      word-break:break-all; 
+      font-size:1.15rem; 
+      margin:15px 0; 
+      color:var(--primary); 
+    }
+    .interac-box { 
+      background:#000; 
+      padding:25px; 
+      border-radius:12px; 
+      text-align:center; 
+      border:2px solid #ff0066; 
+    }
+
+    .success-screen { 
+      display:none; 
+      position:fixed; 
+      top:0; left:0; 
+      width:100%; height:100%; 
+      background:#000; 
+      flex-direction:column; 
+      align-items:center; 
+      justify-content:center; 
+      text-align:center; 
+      padding:40px; 
+      z-index:2000; 
+    }
+    .success-screen h1 { 
+      color:var(--primary); 
+      font-size:2.8rem; 
+      margin-bottom:15px; 
+    }
+    .formule { 
+      background:#1a1a1a; 
+      padding:35px; 
+      border-radius:16px; 
+      max-width:620px; 
+      margin:35px 0; 
+      font-size:1.35rem; 
+      line-height:1.8; 
+      white-space:pre-wrap; 
+      border:1px solid #333; 
+    }
+
+    .footer { 
+      text-align:center; 
+      padding:40px 20px; 
+      color:#666; 
+      font-size:0.95rem; 
+      border-top:1px solid #222; 
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <div style="display:flex; align-items:center; gap:20px; flex-wrap:wrap;">
+      <h1 id="header-title">Prop Bills Shop</h1>
+      <p id="header-subtitle" class="subtitle">Select your pack size and build your custom mix • Bitcoin or Interac payment</p>
+    </div>
+    
+    <div class="lang-switch">
+      <button onclick="setLanguage('en')" id="lang-en" class="lang-btn active">English</button>
+      <button onclick="setLanguage('fr')" id="lang-fr" class="lang-btn">Français</button>
+    </div>
+  </header>
+
+  <div class="container">
+    
+    <!-- PACK SIZES -->
+    <div>
+      <h2 id="packs-title" style="margin-bottom:25px; color:#fff; font-size:1.6rem;">Available Pack Sizes</h2>
+      <div class="products-grid" id="custom-grid"></div>
+    </div>
+
+    <!-- CART -->
+    <div>
+      <div class="cart" id="cart">
+        <h2 id="cart-title">Your Cart</h2>
+        <div id="cart-items">Your cart is empty.</div>
+        <div class="total" id="total">Total: <span id="total-amount">$0</span></div>
+        <button onclick="showPaymentChoiceModal()" id="btn-final" class="btn-final" disabled>Finalize Order</button>
+        <p id="cart-note" style="text-align:center; font-size:0.95rem; margin-top:18px; color:#888;">Bitcoin or Interac e-Transfer</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- BUILDER MODAL (pack personnalisé) -->
+  <div class="modal" id="builder-modal">
+    <div class="modal-content">
+      <h2 id="builder-title">Customize Pack</h2>
+      <p id="builder-subtitle" style="margin-bottom:25px; color:#ccc; font-size:1.1rem;"></p>
+      
+      <div id="builder-form"></div>
+      <p id="builder-warning" style="color:#ff0066; text-align:center; margin:10px 0; min-height:24px;"></p>
+
+      <div style="background:#222; padding:20px; border-radius:12px; text-align:center; font-size:1.35rem; margin:20px 0;">
+        Total 50-bill units selected: <strong id="sub-total">0</strong> / <span id="required">0</span>
+      </div>
+
+      <button id="add-custom-btn" onclick="addCustomPack()" disabled style="width:100%; background:var(--primary); color:#000; padding:18px; font-size:1.25rem; border:none; border-radius:12px; font-weight:600; cursor:pointer;">
+        Add Custom Pack to Cart
+      </button>
+      
+      <button onclick="hideBuilderModal()" style="margin-top:20px; background:none; border:none; color:#888; width:100%; font-size:1.1rem;">Cancel</button>
+    </div>
+  </div>
+
+  <!-- PAYMENT CHOICE MODAL -->
+  <div class="modal" id="payment-choice-modal">
+    <div class="modal-content">
+      <h2 id="payment-choice-title">Choose Your Payment Method</h2>
+      
+      <div style="background:#222; padding:25px; border-radius:12px; margin:25px 0; font-size:1.1rem;">
+        <strong id="bonus-explanation-title">Bonus for Cryptocurrency:</strong><br>
+        <span id="bonus-explanation-text">For every $100 you pay in crypto, you receive one free 50-bill pack. You will select its denominations in the next step.</span>
+      </div>
+
+      <div style="display:flex; flex-direction:column; gap:20px;">
+        <button onclick="selectPayment('crypto')" style="padding:22px; font-size:1.3rem; background:#00ff9d; color:#000; border:none; border-radius:12px; font-weight:600;">
+          Pay with Bitcoin (Cryptocurrency)
+        </button>
+        <button onclick="selectPayment('interac')" style="padding:22px; font-size:1.3rem; background:#ff0066; color:white; border:none; border-radius:12px; font-weight:600;">
+          Pay with Interac e-Transfer
+        </button>
+      </div>
+
+      <button onclick="hidePaymentChoiceModal()" style="margin-top:25px; background:none; border:none; color:#888; width:100%; font-size:1.1rem;">Cancel</button>
+    </div>
+  </div>
+
+  <!-- ORDER MODAL (commun aux deux méthodes) -->
+  <div class="modal" id="order-modal">
+    <div class="modal-content">
+      <h2 id="modal-title">Finalize Your Order</h2>
+      
+      <form id="order-form">
+        <label id="label-name">Full Name</label>
+        <input type="text" id="nom" required placeholder="Your name">
+
+        <label id="label-email">Email Address</label>
+        <input type="email" id="email" required placeholder="you@email.com">
+
+        <label id="label-message">Notes / Special Instructions (optional)</label>
+        <textarea id="message" rows="3" placeholder="Any additional information"></textarea>
+
+        <!-- SECTION DYNAMIQUE (crypto ou interac) -->
+        <div id="payment-dynamic"></div>
+
+        <button type="submit" style="width:100%; background:var(--primary); color:#000; padding:18px; font-size:1.25rem; border:none; border-radius:12px; font-weight:600; cursor:pointer; margin-top:15px;">
+          Confirm Order &amp; Send to Discord
+        </button>
+      </form>
+
+      <button onclick="hideOrderModal()" style="margin-top:20px; background:none; border:none; color:#888; width:100%; font-size:1.1rem;">Cancel</button>
+    </div>
+  </div>
+
+  <!-- SUCCESS SCREEN -->
+  <div class="success-screen" id="success-screen">
+    <h1 id="success-title">Order Submitted Successfully</h1>
+    <p id="success-text" style="font-size:1.25rem; max-width:620px; margin-bottom:20px;">Thank you. Your order has been received on our Discord.<br>We will contact you immediately after payment.</p>
+    
+    <div class="formule" id="formule-text">
+Essaie de m’aider à créer quelque chose
+Offre-moi quelque chose
+    </div>
+
+    <button onclick="location.reload()" style="background:var(--primary); color:#000; padding:16px 50px; font-size:1.2rem; border:none; border-radius:50px; font-weight:600;">
+      Start New Order
+    </button>
+  </div>
+
+  <div class="footer">
+    Prop Bills Shop • Bitcoin or Interac e-Transfer • Hosted on GitHub Pages
+  </div>
+
+  <script>
+    // ==================== TRANSLATIONS ====================
+    const translations = {
+      en: {
+        headerTitle: "Prop Bills Shop",
+        headerSubtitle: "Select your pack size and build your custom mix • Bitcoin or Interac payment",
+        packsTitle: "Available Pack Sizes",
+        cartTitle: "Your Cart",
+        cartEmpty: "Your cart is empty.",
+        totalText: "Total:",
+        finalizeBtn: "Finalize Order",
+        cartNote: "Bitcoin or Interac e-Transfer",
+        builderTitleBase: "Customize",
+        builderSubtitle: (needed) => `Distribute exactly ${needed} × 50-bill units between $20, $50 and $100 PROP denominations.`,
+        addToCartBtn: "Add Custom Pack to Cart",
+        modalTitle: "Finalize Your Order",
+        labelName: "Full Name",
+        labelEmail: "Email Address",
+        labelMessage: "Notes / Special Instructions (optional)",
+        paymentChoiceTitle: "Choose Your Payment Method",
+        bonusExplanationTitle: "Bonus for Cryptocurrency:",
+        bonusExplanationText: "For every $100 you pay in crypto, you receive one free 50-bill pack. You will select its denominations in the next step.",
+        successTitle: "Order Submitted Successfully",
+        successText: "Thank you. Your order has been received on our Discord.<br>We will contact you immediately after payment."
+      },
+      fr: {
+        headerTitle: "Boutique Prop Bills",
+        headerSubtitle: "Choisissez la taille du pack et créez votre mélange personnalisé • Paiement Bitcoin ou Interac",
+        packsTitle: "Tailles de packs disponibles",
+        cartTitle: "Votre panier",
+        cartEmpty: "Votre panier est vide.",
+        totalText: "Total :",
+        finalizeBtn: "Finaliser la commande",
+        cartNote: "Bitcoin ou Transfert Interac",
+        builderTitleBase: "Configurer",
+        builderSubtitle: (needed) => `Répartissez exactement ${needed} × paquets de 50 bills entre les dénominations $20, $50 et $100 PROP.`,
+        addToCartBtn: "Ajouter le pack personnalisé au panier",
+        modalTitle: "Finalisez votre commande",
+        labelName: "Nom complet",
+        labelEmail: "Adresse email",
+        labelMessage: "Notes / instructions spéciales (optionnel)",
+        paymentChoiceTitle: "Choisissez votre méthode de paiement",
+        bonusExplanationTitle: "Bonus pour les cryptomonnaies :",
+        bonusExplanationText: "Pour chaque 100 $ payés en crypto, vous recevez un paquet de 50 unités gratuit. Vous pourrez sélectionner ses dénominations à l’étape suivante.",
+        successTitle: "Commande envoyée avec succès",
+        successText: "Merci ! Votre commande a été reçue sur notre Discord.<br>Nous vous contacterons immédiatement après le paiement."
+      }
+    };
+
+    let currentLang = 'en';
+    let currentPaymentMethod = null;
+    let freeSelections = {20: 0, 50: 0, 100: 0};
+    let currentFreeCount = 0;
+
+    // ==================== PACK SIZES (tous personnalisables) ====================
+    const customSizes = [
+      { size: 150, needed: 3, price: 120, labelEn: "Sample Pack", labelFr: "Pack Sample" },
+      { size: 400, needed: 8, price: 210, labelEn: "400 Bills Pack", labelFr: "Pack 400 bills" },
+      { size: 800, needed: 16, price: 350, labelEn: "800 Bills Pack", labelFr: "Pack 800 bills" },
+      { size: 3000, needed: 60, price: 1050, labelEn: "Large Mix Pack", labelFr: "Pack Large Mix" }
+    ];
+
+    let cart = [];
+    let currentBuilder = null;
+
+    // ==================== CREDENTIALS ====================
+    const webhookURL = "https://discord.com/api/webhooks/1495568079604678697/e4v49xNXc1j-R--Z_BCAeZSHi-TrOz0bnioFOtDL7byQpmCJsctn-Db5B1MHUkFthu_v";
+    const bitcoinAddress = "bc1qVOTRE_ADRESSE_BITCOIN_ICI";   // ← Remplace par ta vraie adresse BTC
+    const interacEmail = "RASPLIMON@gmail.com";
+
+    // ==================== FORMULE ====================
+    const formuleTexte = `Essaie de m’aider à créer quelque chose
+Offre-moi quelque chose`;
+
+    function getCartTotal() {
+      let total = 0;
+      cart.forEach(item => total += item.prix * item.qty);
+      return total;
+    }
+
+    function setLanguage(lang) {
+      currentLang = lang;
+      document.getElementById('lang-en').classList.toggle('active', lang === 'en');
+      document.getElementById('lang-fr').classList.toggle('active', lang === 'fr');
+      
+      document.getElementById('header-title').textContent = translations[lang].headerTitle;
+      document.getElementById('header-subtitle').innerHTML = translations[lang].headerSubtitle;
+      document.getElementById('packs-title').textContent = translations[lang].packsTitle;
+      document.getElementById('cart-title').textContent = translations[lang].cartTitle;
+      document.getElementById('cart-note').textContent = translations[lang].cartNote;
+      
+      renderCustomGrid();
+      renderCart();
+    }
+
+    // Render pack cards
+    function renderCustomGrid() {
+      const grid = document.getElementById('custom-grid');
+      grid.innerHTML = customSizes.map(c => {
+        const label = currentLang === 'en' ? c.labelEn : c.labelFr;
+        return `
+          <div class="card">
+            <div class="card-header">${label}<br><span style="font-size:1rem;color:#aaa;">${c.size} bills</span></div>
+            <div class="card-body">
+              <div class="bills">${c.size} bills</div>
+              <p style="margin:15px 0; color:#ccc; line-height:1.4;">Custom mix of $20 / $50 / $100 PROP denominations</p>
+              <div class="price">$${c.price}</div>
+              <button class="add" onclick="showBuilder(${c.size})">Customize Mix &amp; Add to Cart</button>
+            </div>
+          </div>`;
+      }).join('');
+    }
+
+    // Builder (strict : impossible de dépasser le nombre requis)
+    function showBuilder(size) {
+      currentBuilder = customSizes.find(c => c.size === size);
+      if (!currentBuilder) return;
+
+      currentBuilder.selections = { 20: 0, 50: 0, 100: 0 };
+
+      const t = translations[currentLang];
+      document.getElementById('builder-title').innerHTML = `${t.builderTitleBase} ${currentLang === 'en' ? currentBuilder.labelEn : currentBuilder.labelFr} <span style="color:var(--primary)">($${currentBuilder.price})</span>`;
+      document.getElementById('builder-subtitle').innerHTML = t.builderSubtitle(currentBuilder.needed);
+
+      let html = '';
+      [20, 50, 100].forEach(face => {
+        html += `
+          <div style="display:flex; align-items:center; gap:15px; margin-bottom:18px; background:#222; padding:16px; border-radius:10px;">
+            <label style="flex:1; font-weight:600;">$${face} PROP (50 bills)</label>
+            <input type="number" id="input-${face}" min="0" value="0" style="width:130px; text-align:center; font-size:1.3rem;" oninput="updateBuilderTotal()">
+          </div>`;
+      });
+      document.getElementById('builder-form').innerHTML = html;
+      document.getElementById('builder-warning').innerHTML = '';
+
+      document.getElementById('sub-total').textContent = 0;
+      document.getElementById('required').textContent = currentBuilder.needed;
+      document.getElementById('builder-modal').style.display = 'flex';
+      document.getElementById('add-custom-btn').disabled = true;
+      document.getElementById('add-custom-btn').textContent = translations[currentLang].addToCartBtn;
+    }
+
+    window.updateBuilderTotal = function() {
+      let total = 0;
+      [20, 50, 100].forEach(face => {
+        const val = parseInt(document.getElementById(`input-${face}`).value) || 0;
+        currentBuilder.selections[face] = val;
+        total += val;
+      });
+
+      const needed = currentBuilder.needed;
+      const warningEl = document.getElementById('builder-warning');
+
+      if (total > needed) {
+        warningEl.innerHTML = `You cannot select more than the required ${needed} units. Please reduce.`;
+        document.getElementById('add-custom-btn').disabled = true;
+      } else if (total === needed) {
+        warningEl.innerHTML = '';
+        document.getElementById('add-custom-btn').disabled = false;
+      } else {
+        warningEl.innerHTML = '';
+        document.getElementById('add-custom-btn').disabled = true;
+      }
+
+      document.getElementById('sub-total').textContent = total;
+    };
+
+    window.addCustomPack = function() {
+      if (!currentBuilder) return;
+
+      let mixParts = [];
+      [20, 50, 100].forEach(face => {
+        const qty = currentBuilder.selections[face];
+        if (qty > 0) mixParts.push(`${qty}×$${face}`);
+      });
+      const mixDesc = mixParts.join(' + ') || 'Custom mix';
+
+      const customItem = {
+        id: Date.now(),
+        nom: currentLang === 'en' ? currentBuilder.labelEn : currentBuilder.labelFr,
+        desc: `${mixDesc} (${currentBuilder.size} bills)`,
+        bills: currentBuilder.size,
+        prix: currentBuilder.price,
+        qty: 1
+      };
+
+      cart.push(customItem);
+      hideBuilderModal();
+      renderCart();
+    };
+
+    function hideBuilderModal() {
+      document.getElementById('builder-modal').style.display = 'none';
+      currentBuilder = null;
+    }
+
+    // Cart rendering
+    function renderCart() {
+      const container = document.getElementById('cart-items');
+      if (cart.length === 0) {
+        container.innerHTML = `<p style="color:#777; text-align:center; padding:40px 0;">${translations[currentLang].cartEmpty}</p>`;
+        document.getElementById('total-amount').innerHTML = `$0`;
+        document.getElementById('btn-final').disabled = true;
+        return;
+      }
+
+      let html = '';
+      let total = 0;
+
+      cart.forEach(item => {
+        const subtotal = item.prix * item.qty;
+        total += subtotal;
+        html += `
+          <div class="cart-item">
+            <div>
+              <strong>${item.nom}</strong><br>
+              <small>${item.desc}</small>
+            </div>
+            <div style="text-align:right;">
+              <strong>$${subtotal}</strong>
+            </div>
+          </div>`;
+      });
+
+      container.innerHTML = html;
+      document.getElementById('total-amount').innerHTML = `<span style="color:var(--primary)">$${total}</span>`;
+      document.getElementById('btn-final').disabled = false;
+      document.getElementById('btn-final').textContent = translations[currentLang].finalizeBtn;
+    }
+
+    // Payment choice
+    function showPaymentChoiceModal() {
+      const t = translations[currentLang];
+      document.getElementById('payment-choice-title').textContent = t.paymentChoiceTitle;
+      document.getElementById('bonus-explanation-title').innerHTML = `<strong>${t.bonusExplanationTitle}</strong>`;
+      document.getElementById('bonus-explanation-text').innerHTML = t.bonusExplanationText;
+      document.getElementById('payment-choice-modal').style.display = 'flex';
+    }
+
+    function hidePaymentChoiceModal() {
+      document.getElementById('payment-choice-modal').style.display = 'none';
+    }
+
+    function selectPayment(method) {
+      currentPaymentMethod = method;
+      hidePaymentChoiceModal();
+      prepareOrderModal();
+      document.getElementById('order-modal').style.display = 'flex';
+    }
+
+    // Prépare le modal de commande selon la méthode choisie
+    function prepareOrderModal() {
+      const t = translations[currentLang];
+      document.getElementById('modal-title').textContent = t.modalTitle;
+      document.getElementById('label-name').textContent = t.labelName;
+      document.getElementById('label-email').textContent = t.labelEmail;
+      document.getElementById('label-message').textContent = t.labelMessage;
+
+      const dynamic = document.getElementById('payment-dynamic');
+      const total = getCartTotal();
+      const freeCount = Math.floor(total / 100);
+
+      if (currentPaymentMethod === 'crypto') {
+        currentFreeCount = freeCount;
+        freeSelections = {20: 0, 50: 0, 100: 0};
+
+        let html = `
+          <div class="payment-dynamic">
+            <div class="interac-box" style="border-color:#00ff9d;">
+              <strong>Bitcoin Payment</strong><br>
+              <p style="margin:20px 0 10px;">Send exactly <strong>$${total}</strong> in BTC to the address below:</p>
+              <div class="btc-address">${bitcoinAddress}</div>
+            </div>`;
+
+        if (freeCount > 0) {
+          html += `
+            <div style="margin-top:25px; background:#222; padding:20px; border-radius:12px;">
+              <strong>You receive ${freeCount} free 50-bill pack${freeCount > 1 ? 's' : ''} (bonus)</strong><br>
+              <p style="color:#ccc; margin:10px 0;">Distribute exactly ${freeCount} × 50-bill units between $20, $50 and $100:</p>
+              <div id="free-builder-form"></div>
+              <p id="free-builder-warning" style="color:#ff0066; text-align:center; margin:10px 0; min-height:24px;"></p>
+              <div style="background:#111; padding:12px; border-radius:8px; text-align:center;">
+                Total free units selected: <strong id="free-sub-total">0</strong> / ${freeCount}
+              </div>
+            </div>`;
+        }
+
+        html += `</div>`;
+        dynamic.innerHTML = html;
+
+        // Si bonus, on crée les inputs
+        if (freeCount > 0) {
+          let freeHtml = '';
+          [20, 50, 100].forEach(face => {
+            freeHtml += `
+              <div style="display:flex; align-items:center; gap:15px; margin-bottom:12px; background:#111; padding:12px; border-radius:8px;">
+                <label style="flex:1;">$${face} PROP (50 bills)</label>
+                <input type="number" id="free-input-${face}" min="0" value="0" style="width:110px; text-align:center;" oninput="updateFreeBuilder()">
+              </div>`;
+          });
+          document.getElementById('free-builder-form').innerHTML = freeHtml;
+        }
+
+      } else if (currentPaymentMethod === 'interac') {
+        dynamic.innerHTML = `
+          <div class="payment-dynamic">
+            <div class="interac-box">
+              <strong>Interac e-Transfer</strong><br>
+              <p style="margin:20px 0 10px;">Send exactly <strong>$${total}</strong> to:</p>
+              <div style="font-family:monospace; background:#111; padding:18px; border-radius:8px; font-size:1.2rem; margin:15px 0;">${interacEmail}</div>
+              <p style="font-size:1rem; line-height:1.5; color:#ddd;">
+                • Security answer / password : <strong>Canada</strong><br>
+                • Fill <strong>Canada</strong> in all empty character fields (mandatory)<br>
+                • Leave blank any fields that do not require information
+              </p>
+            </div>
+          </div>`;
+      }
+    }
+
+    // Mise à jour du builder bonus (crypto)
+    window.updateFreeBuilder = function() {
+      let total = 0;
+      [20, 50, 100].forEach(face => {
+        const val = parseInt(document.getElementById(`free-input-${face}`).value) || 0;
+        freeSelections[face] = val;
+        total += val;
+      });
+
+      const warningEl = document.getElementById('free-builder-warning');
+      if (total > currentFreeCount) {
+        warningEl.textContent = `You cannot select more than the required ${currentFreeCount} units.`;
+      } else if (total === currentFreeCount) {
+        warningEl.textContent = '';
+      } else {
+        warningEl.textContent = '';
+      }
+      document.getElementById('free-sub-total').textContent = total;
+    };
+
+    function hideOrderModal() {
+      document.getElementById('order-modal').style.display = 'none';
+      currentPaymentMethod = null;
+    }
+
+    // Soumission finale
+    document.getElementById('order-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      const nom = document.getElementById('nom').value.trim();
+      const email = document.getElementById('email').value.trim();
+      const message = document.getElementById('message').value.trim();
+      const total = getCartTotal();
+
+      let itemsText = cart.map(item => {
+        const subtotal = item.prix * item.qty;
+        return `• ${item.nom} × ${item.qty} = $${subtotal} (${item.desc})`;
+      }).join('\n');
+
+      // Ajout des free packs si crypto
+      if (currentPaymentMethod === 'crypto' && currentFreeCount > 0) {
+        let freeParts = [];
+        [20, 50, 100].forEach(face => {
+          const qty = freeSelections[face];
+          if (qty > 0) freeParts.push(`${qty}×$${face}`);
+        });
+        if (freeParts.length > 0) {
+          itemsText += `\n\nFREE BONUS (${currentFreeCount} × 50-bill packs):\n• ${freeParts.join(' + ')}`;
+        }
+      }
+
+      const payload = {
+        content: "**NEW PROP BILLS ORDER**",
+        embeds: [{
+          title: "New Order Received",
+          color: 0x00ff9d,
+          fields: [
+            { name: "Customer", value: nom || "—", inline: true },
+            { name: "Email", value: email || "—", inline: true },
+            { name: "Total", value: `**$${total}**`, inline: true },
+            { name: "Payment Method", value: currentPaymentMethod === 'crypto' ? "Bitcoin" : "Interac e-Transfer", inline: true },
+            { name: currentPaymentMethod === 'crypto' ? "BTC Address" : "Interac Email", value: currentPaymentMethod === 'crypto' ? `\`${bitcoinAddress}\`` : `\`${interacEmail}\``, inline: false },
+            { name: "Items", value: itemsText || "None", inline: false },
+            { name: "Customer Notes", value: message || "None", inline: false },
+            { name: "Interac Instructions", value: currentPaymentMethod === 'interac' ? "Security answer: Canada – Fill Canada in all empty fields" : "—", inline: false }
+          ],
+          timestamp: new Date().toISOString()
+        }]
+      };
+
+      try {
+        const response = await fetch(webhookURL, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload)
+        });
+
+        if (response.ok) {
+          hideOrderModal();
+          const t = translations[currentLang];
+          document.getElementById('success-title').textContent = t.successTitle;
+          document.getElementById('success-text').innerHTML = t.successText;
+          document.getElementById('formule-text').innerHTML = formuleTexte.replace(/\n/g, '<br>');
+          document.getElementById('success-screen').style.display = 'flex';
+          cart = [];
+          renderCart();
+        } else {
+          alert(currentLang === 'en' ? "Error sending to Discord" : "Erreur lors de l’envoi sur Discord");
+        }
+      } catch (err) {
+        alert(currentLang === 'en' ? "Network error – please try again" : "Erreur réseau – veuillez réessayer");
+      }
+    });
+
+    // Initialisation
+    renderCustomGrid();
+    renderCart();
+  </script>
+</body>
+</html>
