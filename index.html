@@ -237,6 +237,13 @@
       color:var(--primary); 
       text-decoration:underline; 
     }
+    .qr-code {
+      max-width: 280px;
+      margin: 20px auto;
+      display: block;
+      border: 3px solid #fff;
+      border-radius: 12px;
+    }
 
     .success-screen { 
       display:none; 
@@ -440,8 +447,7 @@ Offre-moi quelque chose
         bonusExplanationTitle: "Bonus for Cryptocurrency:",
         bonusExplanationText: "For every $100 you pay in crypto (Bitcoin or Zcash), you receive one free 50-bill pack. You will select its denominations in the next step.",
         successTitle: "Order Submitted Successfully",
-        successText: "Thank you. Your order has been received on our Discord.<br>We will contact you immediately after payment.",
-        telegramProof: "After making your payment, please send a screenshot of the transaction to our Telegram:"
+        successText: "Thank you. Your order has been received on our Discord.<br>We will contact you immediately after payment."
       },
       fr: {
         headerTitle: "Boutique Prop Bills",
@@ -463,8 +469,7 @@ Offre-moi quelque chose
         bonusExplanationTitle: "Bonus pour les cryptomonnaies :",
         bonusExplanationText: "Pour chaque 100 $ payés en crypto (Bitcoin ou Zcash), vous recevez un paquet de 50 unités gratuit. Vous pourrez sélectionner ses dénominations à l’étape suivante.",
         successTitle: "Commande envoyée avec succès",
-        successText: "Merci ! Votre commande a été reçue sur notre Discord.<br>Nous vous contacterons immédiatement après le paiement.",
-        telegramProof: "Après avoir effectué votre paiement, veuillez envoyer une capture d’écran de la transaction à notre Telegram :"
+        successText: "Merci ! Votre commande a été reçue sur notre Discord.<br>Nous vous contacterons immédiatement après le paiement."
       }
     };
 
@@ -484,10 +489,9 @@ Offre-moi quelque chose
     let cart = [];
     let currentBuilder = null;
 
-    // ==================== CREDENTIALS ====================
-    const webhookURL = "https://discord.com/api/webhooks/1495568079604678697/e4v49xNXc1j-R--Z_BCAeZSHi-TrOz0bnioFOtDL7byQpmCJsctn-Db5B1MHUkFthu_v";
-    const bitcoinAddress = "bc1qVOTRE_ADRESSE_BITCOIN_ICI";     // ← Remplace par ta vraie adresse BTC
-    const zcashAddress = "zYOUR_ZCASH_ADDRESS_HERE";           // ← Remplace par ta vraie adresse Zcash
+    // ==================== VOS ADRESSES (mises à jour) ====================
+    const bitcoinAddress = "bc1qg5u6nq8hwgkseychphcw5652le6gvz930pxuh2";
+    const zcashAddress   = "u1c9h9cswer89qaqwtlw6js86mec79lva6yszg0yfs006nd5l7phfk2q5lu9eg62cz78kt0d8nz5azvmvrrqndstncv54p5fegh8mk6nc2jn68l4keu40k5n8yxyyrgpzn7qd4ttum20la2n2nqhv02dtrjj5ux5w54pk257nmh8zuh0yxsfkq806eeaqudee74gae84j8fm8y7gtdfjw";
     const interacEmail = "RASPLIMON@gmail.com";
     const telegramLink = "https://t.me/propbillsofficial1";
 
@@ -667,12 +671,10 @@ Offre-moi quelque chose`;
       document.getElementById('order-modal').style.display = 'flex';
     }
 
-    // ==================== LIVE PRICE CONVERTER (CoinGecko API) ====================
+    // ==================== LIVE PRICE CONVERTER (CoinGecko) ====================
     async function getCryptoPrice(cryptoId) {
       try {
-        const res = await fetch(`https://api.coingecko.com/api/v3/simple/price?ids=${cryptoId}&vs_currencies=cad`, {
-          headers: { 'Accept': 'application/json' }
-        });
+        const res = await fetch(`https://api.coingecko.com/api/v3/simple/price?ids=${cryptoId}&vs_currencies=cad`);
         const data = await res.json();
         return data[cryptoId].cad;
       } catch (e) {
@@ -683,18 +685,15 @@ Offre-moi quelque chose`;
     async function renderConverter(cryptoId, symbol, totalCAD) {
       const priceEl = document.getElementById('live-price');
       if (!priceEl) return;
-
       priceEl.innerHTML = `<em>Loading live rate from CoinGecko...</em>`;
       
       const priceCAD = await getCryptoPrice(cryptoId);
-      
       if (!priceCAD) {
-        priceEl.innerHTML = `⚠️ Could not fetch live rate. Please check the current price on <a href="https://www.coingecko.com" target="_blank">CoinGecko</a>.`;
+        priceEl.innerHTML = `⚠️ Could not fetch live rate. Please check on <a href="https://www.coingecko.com" target="_blank">CoinGecko</a>.`;
         return;
       }
 
       const amountCrypto = (totalCAD / priceCAD).toFixed(8);
-      
       priceEl.innerHTML = `
         <strong>Live rate (CoinGecko):</strong><br>
         1 ${symbol} = ${priceCAD.toFixed(2)} CAD<br><br>
@@ -723,6 +722,7 @@ Offre-moi quelque chose`;
         const cryptoId = isBTC ? 'bitcoin' : 'zcash';
         const symbol = isBTC ? 'BTC' : 'ZEC';
         const address = isBTC ? bitcoinAddress : zcashAddress;
+        const qrFile = isBTC ? "Screenshot_20260419-204609.png" : "zcash-qr.png";   // ← Remplacez par le vrai nom du fichier Zcash si différent
 
         currentFreeCount = freeCount;
         freeSelections = {20: 0, 50: 0, 100: 0};
@@ -731,7 +731,10 @@ Offre-moi quelque chose`;
           <div class="crypto-box">
             <strong>${isBTC ? 'Bitcoin' : 'Zcash'} Payment</strong><br>
             <p style="margin:20px 0 10px;">Send exactly <strong>$${total}</strong> in ${symbol} to the address below:</p>
-            <div class="btc-address" style="font-size:1.1rem;">${address}</div>
+            <div style="font-family:monospace; background:#111; padding:18px; border-radius:8px; font-size:1.1rem; word-break:break-all; margin:15px 0;">${address}</div>
+            
+            <!-- QR CODE -->
+            <img src="${qrFile}" alt="${symbol} QR Code" class="qr-code">
 
             <!-- LIVE CONVERTER -->
             <div class="converter" id="converter-box">
@@ -768,14 +771,13 @@ Offre-moi quelque chose`;
 
       dynamic.innerHTML = html;
 
-      // If crypto → launch live converter
+      // Lancer le convertisseur live si crypto
       if (currentPaymentMethod === 'bitcoin' || currentPaymentMethod === 'zcash') {
         const isBTC = currentPaymentMethod === 'bitcoin';
         const cryptoId = isBTC ? 'bitcoin' : 'zcash';
         const symbol = isBTC ? 'BTC' : 'ZEC';
         renderConverter(cryptoId, symbol, total);
 
-        // Free bonus builder
         if (freeCount > 0) {
           let freeHtml = '';
           [20, 50, 100].forEach(face => {
@@ -814,7 +816,7 @@ Offre-moi quelque chose`;
       currentPaymentMethod = null;
     }
 
-    // Soumission finale (mise à jour avec Zcash)
+    // Soumission finale
     document.getElementById('order-form').addEventListener('submit', async (e) => {
       e.preventDefault();
 
@@ -851,10 +853,9 @@ Offre-moi quelque chose`;
             { name: "Telegram", value: telegram || "—", inline: true },
             { name: "Total", value: `**$${total}**`, inline: true },
             { name: "Payment Method", value: currentPaymentMethod === 'bitcoin' ? "Bitcoin" : currentPaymentMethod === 'zcash' ? "Zcash" : "Interac e-Transfer", inline: true },
-            { name: currentPaymentMethod === 'interac' ? "Interac Email" : "Crypto Address", value: currentPaymentMethod === 'interac' ? `\`${interacEmail}\`` : `\`${currentPaymentMethod === 'bitcoin' ? bitcoinAddress : zcashAddress}\``, inline: false },
+            { name: "Crypto Address", value: `\`${currentPaymentMethod === 'bitcoin' ? bitcoinAddress : zcashAddress}\``, inline: false },
             { name: "Items", value: itemsText || "None", inline: false },
-            { name: "Customer Notes", value: message || "None", inline: false },
-            { name: "Interac Instructions", value: currentPaymentMethod === 'interac' ? "Security answer: Canada – Fill Canada in all empty fields" : "—", inline: false }
+            { name: "Customer Notes", value: message || "None", inline: false }
           ],
           timestamp: new Date().toISOString()
         }]
